@@ -76,6 +76,9 @@ static ESL_OPTIONS options[] = {
   /* control of output(s) */
   { "-o",           eslARG_OUTFILE,      NULL, NULL, NULL,    NULL,  NULL,  NULL,          "direct output to file <f>, not stdout",                        4 },
   { "-A",           eslARG_OUTFILE,      NULL, NULL, NULL,    NULL,  NULL,  NULL,          "save multiple alignment of all hits to file <f>",              4 },
+  { "--stockholm",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--a2m,--pfam",      "output alignment of hits in stockholm format",                       2 },
+  { "--pfam",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--a2m,--stockholm",           "output alignment of hits in pfam format.  Requires --notextw or --textw=0",              2 },
+  { "--a2m",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--stockholm,--pfam",          "output alignment of hits in a2m format",                       2 },
   { "--tblout",     eslARG_OUTFILE,      NULL, NULL, NULL,    NULL,  NULL,  NULL,          "save parseable table of hits to file <f>",                     4 },
   { "--dfamtblout", eslARG_OUTFILE,      NULL, NULL, NULL,    NULL,  NULL,  NULL,          "save table of hits to file, in Dfam format <f>",               4 },
   { "--aliscoresout", eslARG_OUTFILE,    NULL, NULL, NULL,    NULL,  NULL,  NULL,          "save scores for each position in each alignment to <f>",       4 },
@@ -252,7 +255,7 @@ static void          assign_msa_name(struct cfg_s *cfg, ESL_MSA *msa);
 #ifdef p7ENABLE_FMINDEX
 static P7_SCOREDATA *create_fm_scoredata(struct cfg_s *cfg, P7_PROFILE *gm, P7_OPROFILE *om);
 #endif
-static void          output_optional_msa(FILE *afp, P7_HMM *hmm, P7_TOPHITS *th);
+static void          output_optional_msa(ESL_GETOPTS *go, FILE *afp, P7_HMM *hmm, P7_TOPHITS *th);
 
 
 /*****************************************************************
@@ -536,7 +539,7 @@ main(int argc, char **argv)
 
       if (cfg.tblfp)       p7_tophits_TabularTargets(cfg.tblfp,       hmm->name, hmm->acc, info->th, info->pli, (nquery == 1));
       if (cfg.dfamtblfp)   p7_tophits_TabularXfam   (cfg.dfamtblfp,   hmm->name, hmm->acc, info->th, info->pli);
-      if (cfg.afp)         output_optional_msa      (cfg.afp,         hmm,       info->th); 
+      if (cfg.afp)         output_optional_msa      (go, cfg.afp,         hmm,       info->th); 
       if (cfg.aliscoresfp) p7_tophits_AliScores     (cfg.aliscoresfp, hmm->name, info->th);
       if (cfg.hmmoutfp)    p7_hmmfile_WriteASCII    (cfg.hmmoutfp, /*fmt=default*/-1, hmm);
 
@@ -1472,17 +1475,36 @@ create_fm_scoredata(struct cfg_s *cfg, P7_PROFILE *gm, P7_OPROFILE *om)
 #endif
 
 static void
-output_optional_msa(FILE *afp, P7_HMM *hmm, P7_TOPHITS *th)
+output_optional_msa(ESL_GETOPTS *go, FILE *afp, P7_HMM *hmm, P7_TOPHITS *th)
  {
    ESL_MSA *msa;
 
    if ( p7_tophits_Alignment(th, hmm->abc, NULL, NULL, 0, p7_DEFAULT, &msa) == eslOK) 
      {
+
+       int textw;
+       if (esl_opt_GetBoolean(go, "--notextw")) textw = 0;
+       else                                     textw = esl_opt_GetInteger(go, "--textw");
+
        esl_msa_SetName     (msa, hmm->name, -1);
        esl_msa_SetAccession(msa, hmm->acc,  -1);
        esl_msa_SetDesc     (msa, hmm->desc, -1);
        esl_msa_FormatAuthor(msa, "nhmmer (HMMER %s)", HMMER_VERSION);
-
+       if(esl_opt_IsOn(go, "--stockholm")){
+	 esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
+       }
+       else if(esl_opt_IsOn(go, "--pfam")){
+	 if(textw !=0){
+	   p7_Die("Pfam alignment format requires unlimited output width");
+	 }
+	 esl_msafile_Write(afp, msa, eslMSAFILE_PFAM);
+       }
+       else if(esl_opt_IsOn(go, "--a2m")){
+	 esl_msafile_Write(afp, msa, eslMSAFILE_A2M);          }
+       else{ // default to selecting pfam vs. stockholm dased on output width
+         if (textw > 0) esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
+           else           esl_msafile_Write(afp, msa, eslMSAFILE_PFAM);
+         }
        esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
        esl_msa_Destroy(msa);
      }

@@ -60,6 +60,9 @@ static ESL_OPTIONS options[] = {
 /* Control of output */
   { "-o",           eslARG_OUTFILE,      NULL, NULL, NULL,      NULL,  NULL,  NULL,              "direct output to file <f>, not stdout",                        2 },
   { "-A",           eslARG_OUTFILE,      NULL, NULL, NULL,      NULL,  NULL,  NULL,              "save multiple alignment of hits to file <f>",                  2 },
+  { "--stockholm",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--a2m,--pfam",      "output alignment of hits in stockholm format",                       2 },
+  { "--pfam",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--a2m,--stockholm",           "output alignment of hits in pfam format.  Requires --notextw or --textw=0",                      2 },
+  { "--a2m",        eslARG_NONE,  FALSE, NULL, NULL,      NULL,    "-A",  "--stockholm,--pfam",            "output alignment of hits in a2m format",                       2 },
   { "--tblout",     eslARG_OUTFILE,      NULL, NULL, NULL,      NULL,  NULL,  NULL,              "save parseable table of per-sequence hits to file <f>",        2 },
   { "--domtblout",  eslARG_OUTFILE,      NULL, NULL, NULL,      NULL,  NULL,  NULL,              "save parseable table of per-domain hits to file <f>",          2 },
   { "--pfamtblout", eslARG_OUTFILE,      NULL, NULL, NULL,      NULL,  NULL,  NULL,              "save table of hits and domains to file, in Pfam format <f>",   2 },
@@ -626,9 +629,21 @@ serial_master(ESL_GETOPTS *go, struct cfg_s *cfg)
 	    if (qsq->acc[0]  != '\0') esl_msa_SetAccession(msa, qsq->acc,  -1);
 	    if (qsq->desc[0] != '\0') esl_msa_SetDesc     (msa, qsq->desc, -1);
 	    esl_msa_FormatAuthor(msa, "phmmer (HMMER %s)", HMMER_VERSION);
-
-	    if (textw > 0) esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
-	    else           esl_msafile_Write(afp, msa, eslMSAFILE_PFAM);
+	    if(esl_opt_IsOn(go, "--stockholm")){
+            esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
+	    }
+	    else if(esl_opt_IsOn(go, "--pfam")){
+              if(textw !=0){
+                ESL_EXCEPTION_SYS(eslEWRITE, "Pfam alignment format requires unlimited output width");
+              }
+              esl_msafile_Write(afp, msa, eslMSAFILE_PFAM);
+	    }
+	    else if(esl_opt_IsOn(go, "--a2m")){
+	      esl_msafile_Write(afp, msa, eslMSAFILE_A2M);          }
+	    else{ // default to selecting pfam vs. stockholm dased on output width
+                 if (textw > 0) esl_msafile_Write(afp, msa, eslMSAFILE_STOCKHOLM);
+                 else           esl_msafile_Write(afp, msa, eslMSAFILE_PFAM);
+           }
 
 	    if (fprintf(ofp, "# Alignment of %d hits satisfying inclusion thresholds saved to: %s\n", msa->nseq, esl_opt_GetString(go, "-A")) < 0) ESL_EXCEPTION_SYS(eslEWRITE, "write failed");
 	  }
