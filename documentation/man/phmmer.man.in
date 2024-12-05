@@ -71,10 +71,25 @@ instead of the default stdout.
 .TP
 .BI \-A " <f>"
 Save a multiple alignment of all significant hits (those satisfying
-inclusion thresholds)
-to the file 
-.I <f>
-in Stockholm format.
+.IR "inclusion thresholds" )
+to the file
+.IR <f> .
+If one of the \-\-pfam, \-\-stockholm, or \-\-a2m options is specified,
+the alignment is output in that format.  Otherwise, the alignment is
+in Pfam format if the output width is unlimited, Stockholm if it is limited.
+
+.TP
+.B \-\-stockholm
+Output the alignment of significant hits in Stockholm format.
+
+.TP
+.B \-\-pfam
+Output the alignment of significant hits in Pfam format. Requires
+unlimited output text width.
+
+.TP
+.B \-\-a2m
+Output the alignment of significant hits in a2m format.
 
 .TP 
 .BI \-\-tblout " <f>"
