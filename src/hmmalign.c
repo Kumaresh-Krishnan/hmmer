@@ -24,16 +24,16 @@ static int map_alignment(const char *msafile, const P7_HMM *hmm, ESL_SQ ***ret_s
 
 static ESL_OPTIONS options[] = {
   /* name             type        default      env  range   toggles   reqs  incomp               help                                          docgroup*/
-  { "-h",          eslARG_NONE,     FALSE,     NULL, NULL,   NULL,    NULL,  NULL, "show brief help on version and usage",                              1 },
-  { "-o",          eslARG_OUTFILE,   NULL,     NULL, NULL,   NULL,    NULL,  NULL, "output alignment to file <f>, not stdout",                          1 },
+  { "-h",          eslARG_NONE,     FALSE,     NULL, NULL,   NULL,    NULL,  NULL, "show brief help on version and usage",                         1 },
+  { "-o",          eslARG_OUTFILE,   NULL,     NULL, NULL,   NULL,    NULL,  NULL, "output alignment to file <f>, not stdout",                     1 },
 
-  { "--mapali",    eslARG_INFILE,    NULL,     NULL, NULL,   NULL,    NULL,  NULL, "include alignment in file <f> (same ali that HMM came from)",       2 },
-  { "--trim",      eslARG_NONE,     FALSE,     NULL, NULL,    NULL,   NULL,  NULL, "trim terminal tails of nonaligned residues from alignment",         2 },
-  { "--amino",     eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both protein: no autodetection",  2 },
-  { "--dna",       eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both DNA: no autodetection",      2 },
-  { "--rna",       eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both RNA: no autodetection",      2 },
-  { "--informat",  eslARG_STRING,    NULL,     NULL, NULL,   NULL,    NULL,  NULL, "assert <seqfile> is in format <s>: no autodetection",            2 },
-  { "--outformat", eslARG_STRING, "Stockholm", NULL, NULL,   NULL,    NULL,  NULL, "output alignment in format <s>",                                    2 },
+  { "--mapali",    eslARG_INFILE,    NULL,     NULL, NULL,   NULL,    NULL,  NULL, "include alignment in file <f> (same ali that HMM came from)",  2 },
+  { "--trim",      eslARG_NONE,     FALSE,     NULL, NULL,   NULL,    NULL,  NULL, "trim terminal tails of nonaligned residues from alignment",    2 },
+  { "--amino",     eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both protein: no autodetection",   2 },
+  { "--dna",       eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both DNA: no autodetection",       2 },
+  { "--rna",       eslARG_NONE,     FALSE,     NULL, NULL, ALPHOPTS,  NULL,  NULL, "assert <seqfile>, <hmmfile> both RNA: no autodetection",       2 },
+  { "--informat",  eslARG_STRING,    NULL,     NULL, NULL,   NULL,    NULL,  NULL, "assert <seqfile> is in format <s>: no autodetection",          2 },
+  { "--outformat", eslARG_STRING, "Stockholm", NULL, NULL,   NULL,    NULL,  NULL, "output alignment in format <s>",                               2 },
   {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
@@ -75,28 +75,28 @@ cmdline_help(char *argv0, ESL_GETOPTS *go)
 int
 main(int argc, char **argv)
 {
-  ESL_GETOPTS  *go      = NULL;	/* application configuration       */
-  char         *hmmfile = NULL;	/* HMM file name                   */
-  char         *seqfile = NULL; /* sequence file name              */
-  char         *mapfile = NULL; /* optional mapped MSA file name   */
+  ESL_GETOPTS  *go      = NULL;                 // application configuration
+  char         *hmmfile = NULL;                 // HMM file name
+  char         *seqfile = NULL;                 // sequence file name
+  char         *mapfile = NULL;                 // optional mapped MSA file name 
   int           infmt   = eslSQFILE_UNKNOWN;
   int           outfmt  = eslMSAFILE_STOCKHOLM;
-  P7_HMMFILE   *hfp     = NULL;	/* open HMM file                   */
-  ESL_SQFILE   *sqfp    = NULL;	/* open sequence file              */
-  char         *outfile = NULL;	  /* output filename               */
-  FILE         *ofp     = stdout; /* output stream                 */
-  ESL_SQ      **sq      = NULL;	/* array of sequences              */
-  void         *p       = NULL;	/* tmp ptr for reallocation        */
-  int           nseq    = 0;	/* # of sequences in <seqfile>     */
-  int           mapseq  = 0;	/* # of sequences in mapped MSA    */
-  int           totseq  = 0;	/* # of seqs in all sources        */
-  ESL_ALPHABET *abc     = NULL;	/* alphabet (set from the HMM file)*/
+  P7_HMMFILE   *hfp     = NULL;                 // open HMM file
+  ESL_SQFILE   *sqfp    = NULL;                 // open sequence file
+  char         *outfile = NULL;                 // output filename
+  FILE         *ofp     = stdout;               // output stream 
+  ESL_SQ      **sq      = NULL;                 // array of sequences
+  void         *p       = NULL;                 // tmp ptr for reallocation 
+  int           nseq    = 0;                    // # of sequences in <seqfile> 
+  int           mapseq  = 0;                    // # of sequences in mapped MSA
+  int           totseq  = 0;                    // # of seqs in all sources  
+  ESL_ALPHABET *abc     = NULL;                 // alphabet (set from the HMM file)
   P7_HMM       *hmm     = NULL;
-  P7_TRACE    **tr      = NULL;	/* array of tracebacks             */
-  ESL_MSA      *msa     = NULL;	/* resulting multiple alignment    */
-  int           msaopts = 0;	/* flags to p7_tracealign_Seqs()   */
-  int           idx;		/* counter over seqs, traces       */
-  int           status;		/* easel/hmmer return code         */
+  P7_TRACE    **tr      = NULL;                 // array of tracebacks 
+  ESL_MSA      *msa     = NULL;                 // resulting multiple alignment
+  int           msaopts = 0;                    // flags to p7_tracealign_Seqs()
+  int           idx;                            // counter over seqs, traces
+  int           status;                         // easel/hmmer return code
   char          errbuf[eslERRBUFSIZE];
 
   /* Parse the command line
