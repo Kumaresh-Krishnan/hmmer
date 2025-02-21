@@ -1,44 +1,44 @@
 # VPATH and shell configuration
-top_srcdir = @top_srcdir@
-srcdir     = @srcdir@
-VPATH      = @srcdir@
+top_srcdir = ..
+srcdir     = .
+
 SHELL      = /bin/sh
 
 # Installation targets
 #
-prefix      = @prefix@
-exec_prefix = @exec_prefix@
-datarootdir = @datarootdir@
-bindir      = @bindir@
-libdir      = @libdir@
-includedir  = @includedir@
-mandir      = @mandir@
-docdir      = @docdir@
-pdfdir      = @pdfdir@
-mandir      = @mandir@
+prefix      = /n/eddy_lab/Lab/protein_annotation_dl/hmmer-3.4
+exec_prefix = ${prefix}
+datarootdir = ${prefix}/share
+bindir      = ${exec_prefix}/bin
+libdir      = ${exec_prefix}/lib
+includedir  = ${prefix}/include
+mandir      = ${datarootdir}/man
+docdir      = ${datarootdir}/doc/${PACKAGE_TARNAME}
+pdfdir      = ${docdir}
+mandir      = ${datarootdir}/man
 man1dir     = ${mandir}/man1
 man1ext     = .1
 
-CC             = @CC@
-CFLAGS         = @CFLAGS@
-PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
-PIC_CFLAGS     = @PIC_CFLAGS@
-NEON_CFLAGS    = @NEON_CFLAGS@
-SSE_CFLAGS     = @SSE_CFLAGS@
-VMX_CFLAGS     = @VMX_CFLAGS@
-CPPFLAGS       = @CPPFLAGS@
-LDFLAGS        = @LDFLAGS@
-DEFS           = @DEFS@
-LIBS           = -lhmmer -leasel -ldivsufsort  @LIBS@ @LIBGSL@ @PTHREAD_LIBS@ -lm
+CC             = gcc
+CFLAGS         = -O3
+PTHREAD_CFLAGS = -pthread
+PIC_CFLAGS     = 
+NEON_CFLAGS    = 
+SSE_CFLAGS     = 
+VMX_CFLAGS     = 
+CPPFLAGS       = 
+LDFLAGS        = 
+DEFS           = -DHAVE_CONFIG_H
+LIBS           = -lhmmer -leasel -ldivsufsort    -lpthread -lm
 
-AR        = @AR@
-RANLIB    = @RANLIB@
-STRIP     = @STRIP@
-INSTALL   = @INSTALL@
+AR        = /usr/bin/ar
+RANLIB    = ranlib
+STRIP     = strip
+INSTALL   = /usr/bin/install -c
 
-IMPLDIR   = impl_@IMPL_CHOICE@
-ESLDIR    = @HMMER_ESLDIR@
-SADIR     = @HMMER_SADIR@
+IMPLDIR   = impl_sse
+ESLDIR    = easel
+SADIR     = libdivsufsort
 
 MYLIBDIRS = -L../${ESLDIR} -L./${IMPLDIR} -L../${SADIR} -L.
 MYINCDIRS = -I../${ESLDIR} \
